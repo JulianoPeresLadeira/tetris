@@ -10,7 +10,7 @@ pub trait EntitySpawner {
     fn spawn_button(&mut self, bundle: impl Bundle, icon_image_path: &'static str, title: &str, asset_server: &Res<AssetServer>);
 }
 
-impl EntitySpawner for ChildBuilder<'_, '_, '_> {
+impl EntitySpawner for ChildBuilder<'_> {
     fn spawn_button(&mut self, bundle: impl Bundle, icon_image_path: &'static str, title: &str, asset_server: &Res<AssetServer>) {
         let font = asset_server.load("fonts/FiraSans-Bold.ttf");
         let button_style = Style {

@@ -394,18 +394,18 @@ fn brick_fall_down_system(
 }
 
 fn soft_drop_key_event(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     level_query: Query<&LevelText>,
     mut drop_timer: ResMut<DropTimer>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::J) || keyboard_input.just_pressed(KeyCode::Down) {
+    if keyboard_input.just_pressed(KeyCode::KeyJ) || keyboard_input.just_pressed(KeyCode::ArrowDown) {
         if drop_timer.0.duration().as_secs_f32() > MAX_FALLING_SPEED {
             drop_timer
                 .0
                 .set_duration(Duration::from_secs_f32(MAX_FALLING_SPEED));
         }
-    } else if keyboard_input.just_released(KeyCode::J)
-        || keyboard_input.just_released(KeyCode::Down)
+    } else if keyboard_input.just_released(KeyCode::KeyJ)
+        || keyboard_input.just_released(KeyCode::ArrowDown)
     {
         let level: usize = level_query.get_single().unwrap().0;
         let seted_speed = *BRICK_FALLING_SPEED.lock().unwrap();
@@ -416,7 +416,7 @@ fn soft_drop_key_event(
 }
 
 fn hard_drop_key_event(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut moving_brick_query: Query<(Entity, &mut MovingBrickBundle, &mut Transform)>,
     board_query: Query<&mut BoardBundle>,
 ) {
@@ -441,12 +441,12 @@ fn hard_drop_key_event(
 
 fn rotate_brick_key_event(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut moving_brick_query: Query<(Entity, &mut MovingBrickBundle, &mut Transform)>,
     shadow_brick_query: Query<Entity, With<ShadowBrickBundle>>,
     board_query: Query<&mut BoardBundle>,
 ) {
-    if !(keyboard_input.just_pressed(KeyCode::Up)) {
+    if !(keyboard_input.just_pressed(KeyCode::ArrowUp)) {
         return;
     }
 
@@ -484,12 +484,12 @@ fn rotate_brick_key_event(
 
 fn move_brick_key_event(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut moving_brick_query: Query<(Entity, &mut MovingBrickBundle, &mut Transform)>,
     shadow_brick_query: Query<Entity, With<ShadowBrickBundle>>,
     board_query: Query<&mut BoardBundle>,
 ) {
-    if !(keyboard_input.just_pressed(KeyCode::Left) || keyboard_input.just_pressed(KeyCode::Right))
+    if !(keyboard_input.just_pressed(KeyCode::ArrowLeft) || keyboard_input.just_pressed(KeyCode::ArrowRight))
     {
         return;
     }
@@ -507,7 +507,7 @@ fn move_brick_key_event(
         return;
     }
 
-    let is_left_moving = keyboard_input.just_pressed(KeyCode::Left);
+    let is_left_moving = keyboard_input.just_pressed(KeyCode::ArrowLeft);
 
     let current_brick = moving_brick.1.brick;
     let moving_pos = moving_brick.1.moving_pos;
@@ -769,7 +769,7 @@ fn create_text_bundle(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>
                 color: GAME_DATA_TEXT_COLOR,
             },
         )
-        .with_alignment(TextAlignment::Center),
+        .with_justify(JustifyText::Center),
         transform: Transform {
             translation: Vec3::new(x, y, 0.),
             ..default()
@@ -784,7 +784,7 @@ pub fn is_not_pause_state(pause_state: Res<PauseStateRes>) -> bool {
 }
 
 pub fn pause_state_changed_event(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut events: EventReader<WindowFocused>,
     mut pause_state: ResMut<PauseStateRes>,
 ) {

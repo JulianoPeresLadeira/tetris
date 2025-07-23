@@ -1,7 +1,5 @@
 use bevy::{
-    prelude::{default, App, PluginGroup, Startup, States, Commands, Camera2dBundle, ClearColor},
-    window::{PresentMode, Window, WindowPlugin, WindowResolution},
-    DefaultPlugins, asset::AssetMetaCheck,
+    asset::AssetMetaCheck, core_pipeline::core_2d::Camera2dBundle, prelude::{default, App, ClearColor, Commands, PluginGroup, Startup, States}, window::{PresentMode, Window, WindowPlugin, WindowResolution}, DefaultPlugins
 };
 
 use constants::{WINDOW_HEIGHT, WINDOW_WIDTH, BACKGROUND_COLOR};
@@ -43,7 +41,7 @@ fn main() {
         }))
         // .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, camera_setup)
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         .add_plugins(menu::MenuPlugin)
         .add_plugins(game::GamePlugin)
         .add_plugins(gameover::GameOverPlugin)
