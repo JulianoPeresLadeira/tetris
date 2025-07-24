@@ -151,7 +151,7 @@ fn menu_action(
                 {
                     #[cfg(not(target_arch = "wasm32"))]
                     {
-                        app_exit_events.send(AppExit);
+                        app_exit_events.send(AppExit::Success);
                     }
                 }
                 MenuButtonAction::EasyPlay => {

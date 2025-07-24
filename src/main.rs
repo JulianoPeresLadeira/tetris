@@ -1,5 +1,5 @@
 use bevy::{
-    asset::AssetMetaCheck, core_pipeline::core_2d::Camera2dBundle, prelude::{default, App, ClearColor, Commands, PluginGroup, Startup, States}, window::{PresentMode, Window, WindowPlugin, WindowResolution}, DefaultPlugins
+    asset::{AssetMetaCheck, AssetPlugin}, core_pipeline::core_2d::Camera2dBundle, prelude::{default, App, ClearColor, Commands, PluginGroup, Startup, States}, state::app::AppExtStates, window::{PresentMode, Window, WindowPlugin, WindowResolution}, DefaultPlugins
 };
 
 use constants::{WINDOW_HEIGHT, WINDOW_WIDTH, BACKGROUND_COLOR};
@@ -28,8 +28,13 @@ enum GameState {
 fn main() {
     App::new()
         .insert_resource(ClearColor(BACKGROUND_COLOR))
-        .insert_resource(AssetMetaCheck::Never)
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
+        //.insert_resource(AssetMetaCheck::Never)
+        .add_plugins(DefaultPlugins
+            .set(AssetPlugin {
+                meta_check: AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(WindowPlugin {
             primary_window: Some(Window {
                 title: "TETRIS".to_string(),
                 resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT),
