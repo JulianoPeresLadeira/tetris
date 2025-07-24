@@ -557,7 +557,7 @@ fn spawn_brick(commands: &mut Commands, brick: &Brick, moving_pos: &Position) {
         })
         .with_children(|parent| {
             for pos in brick.1 {
-                let color = Color::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap();
+                let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap());
                 parent.spawn(sprite_bundle(
                     BLOCK_WIDTH,
                     color,
@@ -587,7 +587,7 @@ fn spawn_shadow_brick(commands: &mut Commands, brick: &Brick, shadow_pos: &Posit
         .insert(ShadowBrickBundle)
         .with_children(|parent| {
             for pos in brick.1 {
-                let color = Color::rgb_u8(90, 90, 90);
+                let color = Color::srgb_u8(90, 90, 90);
                 parent.spawn(sprite_bundle(
                     BLOCK_WIDTH,
                     color,
@@ -635,10 +635,10 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
         .with_children(|parent| {
             let line_color: Color;
             if ENABLE_SHOWING_BOARD_LINES.load(Ordering::Relaxed) {
-                line_color = Color::rgb_u8(32, 31, 30);
+                line_color = Color::srgb_u8(32, 31, 30);
             } else {
                 // use the color of the default brick, then the lines cannot be seen
-                line_color = Color::hex(&BRICK_COLOR_MAP[&BrickType::None]).unwrap();
+                line_color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&BrickType::None]).unwrap());
             }
             // this is the background color view
             parent.spawn(SpriteBundle {
@@ -663,7 +663,7 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
             // show all the bricks
             for x in 0..BOARD_VIEW_X {
                 for y in 0..BOARD_VIEW_Y {
-                    let color = Color::hex(&BRICK_COLOR_MAP[&board.0[x][y]]).unwrap();
+                    let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&board.0[x][y]]).unwrap());
                     parent.spawn(sprite_bundle(
                         BLOCK_WIDTH,
                         color,
@@ -748,7 +748,7 @@ fn spawn_next_brick(commands: &mut Commands, brick: Brick) {
         })
         .with_children(|parent| {
             for pos in brick.1 {
-                let color = Color::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap();
+                let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap());
                 parent.spawn(sprite_bundle(
                     BLOCK_WIDTH,
                     color,
