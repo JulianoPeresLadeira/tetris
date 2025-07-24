@@ -2,8 +2,8 @@
 use bevy::{prelude::{Bundle, AssetServer, Res, default, Color, ChildBuilder, ButtonBundle, BuildChildren, ImageBundle, TextBundle}, ui::{Style, Val, UiRect, JustifyContent, AlignItems, PositionType, UiImage}, text::TextStyle};
 
 
-const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 
 
 pub trait EntitySpawner {
