@@ -266,9 +266,9 @@ fn brick_fall_down_system(
     mut board_query: Query<(Entity, &mut BoardBundle)>,
     next_brick_query: Query<(Entity, &mut NextBrickBundle)>,
     mut text_query: ParamSet<(
-        Query<(&mut Text, &mut ScoreText)>,
-        Query<(&mut Text, &mut LinesText)>,
-        Query<(&mut Text, &mut LevelText)>,
+        Query<(&mut Text2d, &mut ScoreText)>,
+        Query<(&mut Text2d, &mut LinesText)>,
+        Query<(&mut Text2d, &mut LevelText)>,
     )>,
     mut play_state: ResMut<NextState<GameState>>,
     mut game_scores_stored: ResMut<GameScoresRes>,
