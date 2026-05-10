@@ -1,0 +1,6 @@
+    Finished `dev` profile [optimized + debuginfo] target(s) in 0.35s
+     Running `target\debug\tetris.exe`
+[2m2026-05-10T00:32:35.598762Z[0m [32m INFO[0m [2mbevy_diagnostic::system_information_diagnostics_plugin::internal[0m[2m:[0m SystemInfo { os: "Windows 11 Pro", kernel: "26200", cpu: "AMD Ryzen 9 7950X3D 16-Core Processor", core_count: "16", memory: "63.1 GiB" }
+[2m2026-05-10T00:32:35.986060Z[0m [32m INFO[0m [2mbevy_render::renderer[0m[2m:[0m AdapterInfo { name: "NVIDIA GeForce RTX 4080 SUPER", vendor: 4318, device: 9986, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "595.79", backend: Vulkan }
+[2m2026-05-10T00:32:36.322653Z[0m [32m INFO[0m [2mbevy_render::batching::gpu_preprocessing[0m[2m:[0m GPU preprocessing is fully supported on this device.
+[2m2026-05-10T00:32:36.324225Z[0m [32m INFO[0m [2mbevy_winit::system[0m[2m:[0m Creating new window TETRIS (0v0)

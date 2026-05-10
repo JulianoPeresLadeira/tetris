@@ -10,7 +10,7 @@ pub fn despawn_with_component<T: Component>(
     mut commands: Commands,
 ) {
     for entity in &to_despawn {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 

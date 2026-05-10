@@ -1,6 +1,6 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
-use crate::{utils::{despawn_with_component, common_button_system}, constants::{BACKGROUND, TEXT_COLOR}, common_entity::EntitySpawner, GameState};
+use crate::{utils::{despawn_with_component, common_button_system}, constants::{BACKGROUND, TEXT_COLOR}, common_entity::spawn_button, GameState};
 
 
 #[derive(Component)]
@@ -30,46 +30,41 @@ fn help_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..default()
             },
+            BackgroundColor(Color::NONE),
             MenuHelpScreen,
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         padding: UiRect::px(20., 20., 10., 10.),
                         ..default()
                     },
-                    background_color: BACKGROUND.into(),
-                    ..default()
-                })
+                    BackgroundColor(BACKGROUND),
+                ))
                 .with_children(|parent| {
-                    // Display the game name
-                    parent.spawn(
-                        TextBundle::from_section(
-                            "CONTROLS",
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 60.0,
-                                color: TEXT_COLOR,
-                            },
-                        )
-                        .with_style(Style {
+                    parent.spawn((
+                        Text::new("CONTROLS"),
+                        TextFont {
+                            font: font.clone(),
+                            font_size: 60.0,
+                            ..default()
+                        },
+                        TextColor(TEXT_COLOR),
+                        Node {
                             margin: UiRect::all(Val::Px(10.0)),
                             ..default()
-                        }),
-                    );
+                        },
+                    ));
 
                     let game_score = format!("
                     Left : move left    \n
@@ -78,22 +73,21 @@ fn help_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     Down : soft drop     \n
                     Space : hard drop      \n
                     Esc : pause game       \n");
-                    parent.spawn(
-                        TextBundle::from_section(
-                            game_score,
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 40.0,
-                                color: TEXT_COLOR,
-                            },
-                        )
-                        .with_style(Style {
+                    parent.spawn((
+                        Text::new(game_score),
+                        TextFont {
+                            font: font.clone(),
+                            font_size: 40.0,
+                            ..default()
+                        },
+                        TextColor(TEXT_COLOR),
+                        Node {
                             margin: UiRect::all(Val::Px(0.0)),
                             ..default()
-                        }),
-                    );
+                        },
+                    ));
 
-                    parent.spawn_button(GameOverMenuHelpButtonAction::Back, "right.png", "Back", &asset_server);
+                    spawn_button(parent, GameOverMenuHelpButtonAction::Back, "right.png", "Back", &asset_server);
                 });
         });
 }

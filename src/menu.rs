@@ -1,9 +1,7 @@
-
-
-use bevy::{app::AppExit, prelude::*};
+use bevy::prelude::*;
 
 use crate::{
-    common_entity::EntitySpawner,
+    common_entity::spawn_button,
     constants::{BACKGROUND, TEXT_COLOR},
     utils::{common_button_system, despawn_with_component},
     GameState,
@@ -33,11 +31,9 @@ impl Plugin for MenuPlugin {
     }
 }
 
-// Tag component used to tag entities added on the main menu screen
 #[derive(Component)]
 struct OnMainMenuScreen;
 
-// All actions that can be triggered from a button click
 #[derive(Component)]
 enum MenuButtonAction {
     EasyPlay,
@@ -52,83 +48,47 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
                 ..default()
             },
+            BackgroundColor(Color::NONE),
             OnMainMenuScreen,
         ))
         .with_children(|parent| {
             parent
-                .spawn(NodeBundle {
-                    style: Style {
+                .spawn((
+                    Node {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         padding: UiRect::px(120., 120., 10., 30.),
                         ..default()
                     },
-                    background_color: BACKGROUND.into(),
-                    ..default()
-                })
+                    BackgroundColor(BACKGROUND),
+                ))
                 .with_children(|parent| {
-                    // Display the game name
-                    parent.spawn(
-                        TextBundle::from_section(
-                            "TETRIS",
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 80.0,
-                                color: TEXT_COLOR,
-                            },
-                        )
-                        .with_style(Style {
+                    parent.spawn((
+                        Text::new("TETRIS"),
+                        TextFont {
+                            font: font.clone(),
+                            font_size: 80.0,
+                            ..default()
+                        },
+                        TextColor(TEXT_COLOR),
+                        Node {
                             margin: UiRect::all(Val::Px(50.0)),
                             ..default()
-                        }),
-                    );
+                        },
+                    ));
 
-                    // Display three buttons for each action available from the main menu:
-                    // - Easy Mode
-                    // - Normal Mode
-                    // - Hard Mode
-                    // - Help
-                    // - quit
-                    parent.spawn_button(
-                        MenuButtonAction::EasyPlay,
-                        "right.png",
-                        "Easy",
-                        &asset_server,
-                    );
-                    parent.spawn_button(
-                        MenuButtonAction::NormalPlay,
-                        "right.png",
-                        "Normal",
-                        &asset_server,
-                    );
-                    parent.spawn_button(
-                        MenuButtonAction::HardPlay,
-                        "right.png",
-                        "Hard",
-                        &asset_server,
-                    );
-                    parent.spawn_button(
-                        MenuButtonAction::Help,
-                        "wrench.png",
-                        "How To Play",
-                        &asset_server,
-                    );
-                    parent.spawn_button(
-                        MenuButtonAction::Quit,
-                        "exitRight.png",
-                        "Quit",
-                        &asset_server,
-                    );
+                    spawn_button(parent, MenuButtonAction::EasyPlay, "right.png", "Easy", &asset_server);
+                    spawn_button(parent, MenuButtonAction::NormalPlay, "right.png", "Normal", &asset_server);
+                    spawn_button(parent, MenuButtonAction::HardPlay, "right.png", "Hard", &asset_server);
+                    spawn_button(parent, MenuButtonAction::Help, "wrench.png", "How To Play", &asset_server);
+                    spawn_button(parent, MenuButtonAction::Quit, "exitRight.png", "Quit", &asset_server);
                 });
         });
 }
@@ -140,7 +100,7 @@ fn menu_action(
         (&Interaction, &MenuButtonAction),
         (Changed<Interaction>, With<Button>),
     >,
-    mut app_exit_events: EventWriter<AppExit>,
+    mut app_exit_events: ResMut<Messages<AppExit>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut game_level: ResMut<GameLevelRes>,
 ) {
@@ -149,10 +109,7 @@ fn menu_action(
             match menu_button_action {
                 MenuButtonAction::Quit =>
                 {
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        app_exit_events.send(AppExit::Success);
-                    }
+                    app_exit_events.write(AppExit::Success);
                 }
                 MenuButtonAction::EasyPlay => {
                     game_state.set(GameState::Game);

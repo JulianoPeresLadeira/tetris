@@ -1,7 +1,5 @@
-use bevy::{
-    prelude::{OnEnter, OnExit, Plugin, Update},
-    window::WindowFocused,
-};
+use bevy::prelude::*;
+use bevy::window::WindowFocused;
 
 use crate::{
     board::Board,
@@ -23,8 +21,6 @@ use std::{
     },
     time::Duration,
 };
-
-use bevy::{prelude::*, sprite::Anchor};
 
 pub(crate) const BLOCK_INSET: f32 = 1.;
 pub(crate) const BLOCK_WIDTH: f32 = 36.;
@@ -109,17 +105,17 @@ impl Plugin for GamePlugin {
             Update,
             ((
                 brick_fall_down_system,
-                apply_deferred,
+                ApplyDeferred,
                 rotate_brick_key_event,
-                apply_deferred,
+                ApplyDeferred,
                 hard_drop_key_event,
-                apply_deferred,
+                ApplyDeferred,
                 move_brick_key_event,
-                apply_deferred,
+                ApplyDeferred,
                 soft_drop_key_event,
             )
                 .chain(),)
-                .run_if(is_not_pause_state.and_then(in_state(GameState::Game))),
+                .run_if(is_not_pause_state.and(in_state(GameState::Game))),
         )
         .add_systems(
             Update,
@@ -127,7 +123,7 @@ impl Plugin for GamePlugin {
         )
         .add_systems(
             OnEnter(GameState::Game),
-            (setup_game_data, apply_deferred, setup_tetris).chain(),
+            (setup_game_data, ApplyDeferred, setup_tetris).chain(),
         )
         .add_systems(
             OnExit(GameState::Game),
@@ -277,20 +273,20 @@ fn brick_fall_down_system(
     mut play_state: ResMut<NextState<GameState>>,
     mut game_scores_stored: ResMut<GameScoresRes>,
 ) {
-    if !drop_timer.0.tick(time.delta()).finished() {
+    if !drop_timer.0.tick(time.delta()).just_finished() {
         return;
     }
-    let mut board = board_query.get_single_mut().unwrap();
-    let Ok(next_brick) = next_brick_query.get_single() else {
+    let mut board = board_query.single_mut().unwrap();
+    let Ok(next_brick) = next_brick_query.single() else {
         return;
     };
 
     let create_new_next_brick_func = |commands: &mut Commands| {
-        commands.entity(next_brick.0).despawn_recursive();
+        commands.entity(next_brick.0).despawn();
         spawn_next_brick(commands, Brick::new(ENABLE_7_BAG_RANDOMIZATION.load(Ordering::Relaxed)));
     };
 
-    let Ok(mut moving_brick) = moving_brick_query.get_single_mut() else {
+    let Ok(mut moving_brick) = moving_brick_query.single_mut() else {
         // in the initial state, no moving exists, so create a new one and the shadow brick
         let brick = &next_brick.1 .0;
         let init_brick_position = create_brick_start_position(&brick.0);
@@ -324,11 +320,11 @@ fn brick_fall_down_system(
             .occupy_brick(moving_brick.1.brick, moving_brick.1.moving_pos);
         let cleaned_lines = board.1 .0.clean_lines();
 
-        commands.entity(moving_brick.0).despawn_recursive();
-        commands.entity(board.0).despawn_recursive();
+        commands.entity(moving_brick.0).despawn();
+        commands.entity(board.0).despawn();
 
-        if let Ok(shadow_bricks) = shadow_brick_query.get_single() {
-            commands.entity(shadow_bricks).despawn_recursive();
+        if let Ok(shadow_bricks) = shadow_brick_query.single() {
+            commands.entity(shadow_bricks).despawn();
         }
 
         spawn_board(&mut commands, &board.1 .0);
@@ -359,21 +355,21 @@ fn brick_fall_down_system(
             let mut all_cleaned_lines = 0;
             let mut level = 1;
             let mut scores = 0;
-            if let Ok(mut text) = text_query.p1().get_single_mut() {
+            if let Ok(mut text) = text_query.p1().single_mut() {
                 text.1 .0 += cleaned_lines;
-                text.0.sections[0].value = format!("{:}", text.1 .0);
+                text.0.0 = format!("{:}", text.1 .0);
                 all_cleaned_lines = text.1 .0;
             }
 
-            if let Ok(mut text) = text_query.p2().get_single_mut() {
+            if let Ok(mut text) = text_query.p2().single_mut() {
                 text.1 .0 = get_level(all_cleaned_lines);
-                text.0.sections[0].value = format!("{:}", text.1 .0);
+                text.0.0 = format!("{:}", text.1 .0);
                 level = text.1 .0;
             }
 
-            if let Ok(mut text) = text_query.p0().get_single_mut() {
+            if let Ok(mut text) = text_query.p0().single_mut() {
                 text.1 .0 += get_score(level, cleaned_lines);
-                text.0.sections[0].value = format!("{:}", text.1 .0);
+                text.0.0 = format!("{:}", text.1 .0);
                 scores = text.1 .0;
             }
 
@@ -383,7 +379,7 @@ fn brick_fall_down_system(
             game_scores_stored.lines = all_cleaned_lines;
         }
         // reset falling speed to default
-        if let Ok(text) = text_query.p2().get_single() {
+        if let Ok(text) = text_query.p2().single() {
             let level = text.1 .0;
             let speed = *BRICK_FALLING_SPEED.lock().unwrap();
             drop_timer
@@ -407,7 +403,7 @@ fn soft_drop_key_event(
     } else if keyboard_input.just_released(KeyCode::KeyJ)
         || keyboard_input.just_released(KeyCode::ArrowDown)
     {
-        let level: usize = level_query.get_single().unwrap().0;
+        let level: usize = level_query.single().unwrap().0;
         let seted_speed = *BRICK_FALLING_SPEED.lock().unwrap();
         let speed = get_speed(level, seted_speed);
 
@@ -421,10 +417,10 @@ fn hard_drop_key_event(
     board_query: Query<&mut BoardBundle>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Space) {
-        let Ok(mut moving_brick) = moving_brick_query.get_single_mut() else {
+        let Ok(mut moving_brick) = moving_brick_query.single_mut() else {
             return;
         };
-        let Ok(board) = board_query.get_single() else {
+        let Ok(board) = board_query.single() else {
             return;
         };
         let current_brick = moving_brick.1.brick;
@@ -451,10 +447,10 @@ fn rotate_brick_key_event(
     }
 
     // use "let else"
-    let Ok(mut moving_brick) = moving_brick_query.get_single_mut() else {
+    let Ok(mut moving_brick) = moving_brick_query.single_mut() else {
         return;
     };
-    let Ok(board) = board_query.get_single() else {
+    let Ok(board) = board_query.single() else {
         return;
     };
 
@@ -475,10 +471,10 @@ fn rotate_brick_key_event(
             .get_bottom_valid_brick_pos(&rotated_brick, moving_pos);
         spawn_brick(&mut commands, &rotated_brick, moving_pos);
         spawn_shadow_brick(&mut commands, &rotated_brick, &bottom_pos);
-        if let Ok(shadow_bricks) = shadow_brick_query.get_single() {
-            commands.entity(shadow_bricks).despawn_recursive();
+        if let Ok(shadow_bricks) = shadow_brick_query.single() {
+            commands.entity(shadow_bricks).despawn();
         }
-        commands.entity(moving_brick.0).despawn_recursive();
+        commands.entity(moving_brick.0).despawn();
     }
 }
 
@@ -495,10 +491,10 @@ fn move_brick_key_event(
     }
 
     // use "let else"
-    let Ok(mut moving_brick) = moving_brick_query.get_single_mut() else {
+    let Ok(mut moving_brick) = moving_brick_query.single_mut() else {
         return;
     };
-    let Ok(board) = board_query.get_single() else {
+    let Ok(board) = board_query.single() else {
         return;
     };
 
@@ -526,8 +522,8 @@ fn move_brick_key_event(
             moving_brick.2.translation.x += BLOCK_WIDTH;
         }
         // dismiss shadow brick
-        if let Ok(shadow_bricks) = shadow_brick_query.get_single() {
-            commands.entity(shadow_bricks).despawn_recursive();
+        if let Ok(shadow_bricks) = shadow_brick_query.single() {
+            commands.entity(shadow_bricks).despawn();
         }
         let bottom_pos = board
             .0
@@ -542,19 +538,18 @@ fn spawn_brick(commands: &mut Commands, brick: &Brick, moving_pos: &Position) {
     let board_width = BLOCK_WIDTH * BOARD_VIEW_X as f32;
     let board_height = BLOCK_WIDTH * BOARD_VIEW_Y as f32;
     commands
-        .spawn(SpriteBundle {
-            transform: Transform::from_xyz(
+        .spawn((
+            Transform::from_xyz(
                 moving_pos.x as f32 * BLOCK_WIDTH - board_width / 2.0 + BLOCK_WIDTH / 2.,
                 moving_pos.y as f32 * BLOCK_WIDTH - board_height / 2.0 + BLOCK_WIDTH / 2.,
                 0.1,
             ),
-            ..default()
-        })
-        .insert(MovingBrickBundle {
-            moving_pos: *moving_pos,
-            brick: brick.clone(),
-            movable: true,
-        })
+            MovingBrickBundle {
+                moving_pos: *moving_pos,
+                brick: brick.clone(),
+                movable: true,
+            },
+        ))
         .with_children(|parent| {
             for pos in brick.1 {
                 let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap());
@@ -576,15 +571,14 @@ fn spawn_shadow_brick(commands: &mut Commands, brick: &Brick, shadow_pos: &Posit
     let board_width = BLOCK_WIDTH * BOARD_VIEW_X as f32;
     let board_height = BLOCK_WIDTH * BOARD_VIEW_Y as f32;
     commands
-        .spawn(SpriteBundle {
-            transform: Transform::from_xyz(
+        .spawn((
+            Transform::from_xyz(
                 shadow_pos.x as f32 * BLOCK_WIDTH - board_width / 2.0 + BLOCK_WIDTH / 2.,
                 shadow_pos.y as f32 * BLOCK_WIDTH - board_height / 2.0 + BLOCK_WIDTH / 2.,
                 0.0,
             ),
-            ..default()
-        })
-        .insert(ShadowBrickBundle)
+            ShadowBrickBundle,
+        ))
         .with_children(|parent| {
             for pos in brick.1 {
                 let color = Color::srgb_u8(90, 90, 90);
@@ -603,19 +597,18 @@ fn position_to_vec2(pos: &Position, z: f32) -> Vec3 {
 }
 
 #[inline]
-fn sprite_bundle(width: f32, color: Color, trans: Vec3) -> SpriteBundle {
-    SpriteBundle {
-        transform: Transform {
-            translation: trans,
-            ..default()
-        },
-        sprite: Sprite {
+fn sprite_bundle(width: f32, color: Color, trans: Vec3) -> (Sprite, Transform) {
+    (
+        Sprite {
             color,
             custom_size: Some(Vec2::new(width - BLOCK_INSET, width - BLOCK_INSET)),
             ..default()
         },
-        ..default()
-    }
+        Transform {
+            translation: trans,
+            ..default()
+        },
+    )
 }
 
 fn spawn_board(commands: &mut Commands, board: &Board) {
@@ -623,34 +616,23 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
     let board_height = BLOCK_WIDTH * BOARD_VIEW_Y as f32;
 
     commands
-        .spawn(SpriteBundle {
-            transform: Transform::from_xyz(
+        .spawn((
+            Transform::from_xyz(
                 (-board_width) / 2. + BLOCK_WIDTH / 2.,
                 (-board_height) / 2. + BLOCK_WIDTH / 2.,
-                0.0, //zero,which one pixel behind the UI-screen png; cannot be seen in screen
+                0.0,
             ),
-            ..default()
-        })
-        .insert(BoardBundle(board.clone()))
+            BoardBundle(board.clone()),
+        ))
         .with_children(|parent| {
             let line_color: Color;
             if ENABLE_SHOWING_BOARD_LINES.load(Ordering::Relaxed) {
                 line_color = Color::srgb_u8(32, 31, 30);
             } else {
-                // use the color of the default brick, then the lines cannot be seen
                 line_color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&BrickType::None]).unwrap());
             }
-            // this is the background color view
-            parent.spawn(SpriteBundle {
-                transform: Transform {
-                    translation: Vec3::new(
-                        (board_width) / 2. - BLOCK_WIDTH / 2.,
-                        (board_height) / 2. - BLOCK_WIDTH / 2.,
-                        0.0,
-                    ),
-                    ..default()
-                },
-                sprite: Sprite {
+            parent.spawn((
+                Sprite {
                     color: line_color,
                     custom_size: Some(Vec2::new(
                         board_width + BLOCK_INSET,
@@ -658,9 +640,15 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
                     )),
                     ..default()
                 },
-                ..default()
-            });
-            // show all the bricks
+                Transform {
+                    translation: Vec3::new(
+                        (board_width) / 2. - BLOCK_WIDTH / 2.,
+                        (board_height) / 2. - BLOCK_WIDTH / 2.,
+                        0.0,
+                    ),
+                    ..default()
+                },
+            ));
             for x in 0..BOARD_VIEW_X {
                 for y in 0..BOARD_VIEW_Y {
                     let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&board.0[x][y]]).unwrap());
@@ -678,46 +666,43 @@ fn spawn_game_info(commands: &mut Commands, asset_server: &Res<AssetServer>) {
     let board_width = BLOCK_WIDTH * BOARD_X as f32;
     commands
         .spawn((
-            SpriteBundle {
-                transform: Transform::from_xyz(-(board_width / 2. + 80.), 0., 0.),
-                ..default()
-            },
+            Transform::from_xyz(-(board_width / 2. + 80.), 0., 0.),
             GameInfoBundle,
         ))
         .with_children(|parent| {
             let up_margin: f32 = 60.;
             let top_y: f32 = 180.;
             let x: f32 = -50.;
-            parent.spawn(create_text_bundle("SCORE", x, top_y, &asset_server));
+            parent.spawn(create_text_bundle("SCORE", x, top_y, asset_server));
             parent
-                .spawn(create_text_bundle("0", x, top_y - up_margin, &asset_server))
+                .spawn(create_text_bundle("0", x, top_y - up_margin, asset_server))
                 .insert(ScoreText(0));
             parent.spawn(create_text_bundle(
                 "LEVEL",
                 x,
                 top_y - 2. * up_margin,
-                &asset_server,
+                asset_server,
             ));
             parent
                 .spawn(create_text_bundle(
                     "1",
                     x,
                     top_y - 3. * up_margin,
-                    &asset_server,
+                    asset_server,
                 ))
                 .insert(LevelText(1));
             parent.spawn(create_text_bundle(
                 "LINES",
                 x,
                 top_y - 4. * up_margin,
-                &asset_server,
+                asset_server,
             ));
             parent
                 .spawn(create_text_bundle(
                     "0",
                     x,
                     top_y - 5. * up_margin,
-                    &asset_server,
+                    asset_server,
                 ))
                 .insert(LinesText(0));
         });
@@ -728,24 +713,21 @@ fn spawn_next_brick_title(commands: &mut Commands, asset_server: &Res<AssetServe
 
     commands
         .spawn((
-            SpriteBundle {
-                transform: Transform::from_xyz(board_width / 2. + 100., 180., 0.),
-                ..default()
-            },
+            Transform::from_xyz(board_width / 2. + 100., 180., 0.),
             NextBrickTitleBundle,
         ))
         .with_children(|parent| {
-            parent.spawn(create_text_bundle("NEXT", 0., 0., &asset_server));
+            parent.spawn(create_text_bundle("NEXT", 0., 0., asset_server));
         });
 }
 
 fn spawn_next_brick(commands: &mut Commands, brick: Brick) {
     let board_width = BLOCK_WIDTH * BOARD_X as f32;
     commands
-        .spawn(SpriteBundle {
-            transform: Transform::from_xyz(board_width / 2. + 70., 10., 0.),
-            ..default()
-        })
+        .spawn((
+            Transform::from_xyz(board_width / 2. + 70., 10., 0.),
+            NextBrickBundle(brick),
+        ))
         .with_children(|parent| {
             for pos in brick.1 {
                 let color = Color::from(Srgba::hex(&BRICK_COLOR_MAP[&brick.0]).unwrap());
@@ -755,28 +737,21 @@ fn spawn_next_brick(commands: &mut Commands, brick: Brick) {
                     position_to_vec2(&pos, 0.1),
                 ));
             }
-        })
-        .insert(NextBrickBundle(brick));
+        });
 }
 
-fn create_text_bundle(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> Text2dBundle {
-    Text2dBundle {
-        text: Text::from_section(
-            msg,
-            TextStyle {
-                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                font_size: 42.0,
-                color: GAME_DATA_TEXT_COLOR,
-            },
-        )
-        .with_justify(JustifyText::Center),
-        transform: Transform {
-            translation: Vec3::new(x, y, 0.),
+fn create_text_bundle(msg: &str, x: f32, y: f32, asset_server: &AssetServer) -> impl Bundle {
+    (
+        Text2d::new(msg),
+        TextFont {
+            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+            font_size: 42.0,
             ..default()
         },
-        text_anchor: Anchor::TopCenter,
-        ..default()
-    }
+        TextColor(GAME_DATA_TEXT_COLOR),
+        TextLayout::new_with_justify(Justify::Center),
+        Transform::from_xyz(x, y, 0.),
+    )
 }
 
 pub fn is_not_pause_state(pause_state: Res<PauseStateRes>) -> bool {
@@ -785,7 +760,7 @@ pub fn is_not_pause_state(pause_state: Res<PauseStateRes>) -> bool {
 
 pub fn pause_state_changed_event(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut events: EventReader<WindowFocused>,
+    mut events: MessageReader<WindowFocused>,
     mut pause_state: ResMut<PauseStateRes>,
 ) {
     for event in events.read() {
